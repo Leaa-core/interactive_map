@@ -1,6 +1,7 @@
 import indiaMap from '@svg-maps/india'
 import { useMemo, useState, type CSSProperties } from 'react'
 import { locations } from '../data/locations'
+import { stateThemes } from '../data/stateThemes'
 import type { LocationStory } from '../types'
 
 type ArtMapProps = {
@@ -28,12 +29,15 @@ export default function ArtMap({ activeId, onChoose }: ArtMapProps) {
   const activeLocation = locations.find((location) => location.id === activeId)
   const focusState = activeLocation?.state ?? hoveredState
   const byId = useMemo(() => new Map(locations.map((location) => [location.id, location])), [])
+  const themeByState = useMemo(() => new Map(stateThemes.map((theme) => [theme.state, theme])), [])
+  const focusTheme = focusState ? themeByState.get(focusState) : undefined
+  const themeOnlyMarkers = useMemo(() => stateThemes.filter((theme) => !locations.some((location) => location.state === theme.state)), [])
 
   return (
     <section className="india-map-stage" aria-label="Interactive India map with state boundaries and art history locations">
       <div className="map-stage-header">
         <span>INDIA — STATES & UNION TERRITORIES</span>
-        <strong>{focusState ?? 'Choose a glowing art location'}</strong>
+        <strong>{focusState ? `${focusState} · ${focusTheme?.artwork ?? 'art tradition'}` : 'Choose a glowing art location'}</strong>
       </div>
       <div className="india-map-wrap">
         <svg className="india-map" viewBox={indiaMap.viewBox} role="img" aria-label="India states and union territories map">
@@ -49,17 +53,18 @@ export default function ArtMap({ activeId, onChoose }: ArtMapProps) {
           <g className="state-layer">
             {indiaMap.locations.map((state, index) => {
               const isFocused = state.name === focusState
+              const theme = themeByState.get(state.name)
               const hasStory = locations.some((location) => location.state === state.name)
               return (
                 <path
                   key={state.id}
                   d={state.path}
-                  className={`india-state ${isFocused ? 'india-state--focused' : ''} ${hasStory ? 'india-state--story' : ''}`}
+                  className={`india-state ${isFocused ? 'india-state--focused' : ''} ${hasStory ? 'india-state--story' : ''} ${theme ? 'india-state--themed' : ''}`}
                   style={{ '--state-index': index } as CSSProperties}
                   onMouseEnter={() => setHoveredState(state.name)}
                   onMouseLeave={() => setHoveredState(undefined)}
                 >
-                  <title>{state.name}</title>
+                  <title>{theme ? `${state.name} — ${theme.artwork}` : state.name}</title>
                 </path>
               )
             })}
@@ -91,7 +96,6 @@ export default function ArtMap({ activeId, onChoose }: ArtMapProps) {
                   onMouseEnter={() => { setHoveredMarker(location.id); setHoveredState(location.state) }}
                   onMouseLeave={() => { setHoveredMarker(undefined); setHoveredState(undefined) }}
                 >
-                  <circle className="marker-halo" r="13" fill={location.color} />
                   <circle className="marker-ring" r="7.8" />
                   <circle className="marker-core" r="4.2" fill={location.color} />
                   {(active || hovering) && (
@@ -105,10 +109,35 @@ export default function ArtMap({ activeId, onChoose }: ArtMapProps) {
               )
             })}
           </g>
+          <g className="theme-marker-layer">
+            {themeOnlyMarkers.map((theme) => {
+              const hovering = theme.state === hoveredState
+              return (
+                <g
+                  key={theme.state}
+                  className={`theme-marker ${hovering ? 'theme-marker--hovered' : ''}`}
+                  transform={`translate(${theme.position[0]} ${theme.position[1]})`}
+                  onMouseEnter={() => setHoveredState(theme.state)}
+                  onMouseLeave={() => setHoveredState(undefined)}
+                >
+                  <circle r="4.4" />
+                  <circle className="theme-marker__dot" r="1.9" />
+                  {hovering && (
+                    <g className="theme-marker-label" transform="translate(8 -13)">
+                      <rect width="123" height="31" rx="1" />
+                      <text x="6" y="12">{theme.place} · {theme.localLabel}</text>
+                      <text x="6" y="24">{theme.artwork}</text>
+                    </g>
+                  )}
+                </g>
+              )
+            })}
+          </g>
         </svg>
       </div>
       <div className="map-stage-footer">
-        <span><i /> Art location</span>
+        <span><i /> 18 art stories</span>
+        <span><i className="theme-dot" /> 35 state / UT art points</span>
         <span><b /> Historic influence route</span>
         <span>Hover a state to reveal its boundary.</span>
       </div>
