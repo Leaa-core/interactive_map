@@ -72,7 +72,7 @@ export default function App() {
         <p className="eyebrow">FROM CAVE WALL TO CONTEMPORARY STUDIO</p>
         <h1>India,<br /><em>drawn in a thousand</em><br />ways.</h1>
         <p className="intro-copy">Follow the glowing dots through 2,000 years of image-making. Each one opens a story shaped by a place, a people and a way of seeing.</p>
-        <div className="intro-instruction"><Compass size={18} /><span>DRAG TO TURN THE TERRAIN<br />SELECT A LUMINOUS DOT TO ENTER</span></div>
+        <div className="intro-instruction"><Compass size={18} /><span>HOVER A STATE TO TRACE ITS BORDER<br />SELECT A LUMINOUS DOT TO ENTER</span></div>
       </section>
 
       <aside className="map-legend">
